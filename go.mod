@@ -1,4 +1,4 @@
-module Listing
+module github.com/spurtcms/listing
 
 go 1.24.2
 
