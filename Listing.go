@@ -101,6 +101,22 @@ func (listing *Listing) CreateListing(create TblListing) error {
 
 }
 
+func (listing *Listing) EditListings(id int, tenantid string) (list TblListing, err error) {
+
+	if Autherr := AuthandPermission(listing); Autherr != nil {
+
+		return TblListing{}, Autherr
+	}
+
+	list, err = Listingmodels.EditListing(id, tenantid, listing.DB)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return list, nil
+
+}
+
 func (listing *Listing) DeleteListing(id, userid int, tenantid string) error {
 
 	if Autherr := AuthandPermission(listing); Autherr != nil {
