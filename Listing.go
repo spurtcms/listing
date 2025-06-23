@@ -117,6 +117,45 @@ func (listing *Listing) EditListings(id int, tenantid string) (list TblListing, 
 
 }
 
+func (listing *Listing) UpdateListings(update TblListing) error {
+
+	if Autherr := AuthandPermission(listing); Autherr != nil {
+
+		return Autherr
+	}
+
+	modifiedon, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
+
+	Update := TblListing{
+		Id:           update.Id,
+		Title:        update.Title,
+		Description:  update.Description,
+		ContentType:  update.ContentType,
+		ContentId:    update.ContentId,
+		EntryId:      update.EntryId,
+		IsDeleted:    0,
+		IsActive:     1,
+		ModifiedOn:   modifiedon,
+		ModifiedBy:   update.ModifiedBy,
+		ImagePath:    update.ImagePath,
+		ImageName:    update.ImageName,
+		PaymentType:  update.PaymentType,
+		Price:        update.Price,
+		MembershipId: update.MembershipId,
+		TenantId:     update.TenantId,
+	}
+
+	err := Listingmodels.UpdateListing(Update, listing.DB)
+
+	if err != nil {
+
+		return err
+	}
+
+	return nil
+
+}
+
 func (listing *Listing) DeleteListing(id, userid int, tenantid string) error {
 
 	if Autherr := AuthandPermission(listing); Autherr != nil {
