@@ -167,7 +167,7 @@ Once these steps are completed, you are ready to set up and configure the FoodTr
 
 ## Network Setup
 
-### Step 1: Clone the Repository
+### ✅ Step 1: Clone the Repository
 
 Clone the official FoodTraze network repository:
 
@@ -177,12 +177,12 @@ cd foodtraze-network
 ```
 
 
-**Step 2: Download Hyperledger Fabric Binaries & Docker Images**
+### ✅ Step 2: Download Hyperledger Fabric Binaries & Docker Images**
 ```bash
 curl -sSL https://bit.ly/2ysbOFE | bash -s -- -- 1.5.6
 ```
 
-**Step 3: Start the Blockchain Network**
+### ✅ Step 3: Start the Blockchain Network**
 ```bash
 ./network.sh up createChannel -ca -s couchdb
 ```
