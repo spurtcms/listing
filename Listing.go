@@ -74,6 +74,7 @@ func (listing *Listing) CreateListing(create TblListing) error {
 
 	Create := TblListing{
 		Title:        create.Title,
+		Slug:         create.Slug,
 		Description:  create.Description,
 		ContentType:  create.ContentType,
 		ContentId:    create.ContentId,
@@ -87,6 +88,7 @@ func (listing *Listing) CreateListing(create TblListing) error {
 		PaymentType:  create.PaymentType,
 		Price:        create.Price,
 		MembershipId: create.MembershipId,
+		Tag:          create.Tag,
 		TenantId:     create.TenantId,
 	}
 
@@ -129,6 +131,7 @@ func (listing *Listing) UpdateListings(update TblListing) error {
 	Update := TblListing{
 		Id:           update.Id,
 		Title:        update.Title,
+		Slug:         update.Slug,
 		Description:  update.Description,
 		ContentType:  update.ContentType,
 		ContentId:    update.ContentId,
@@ -142,6 +145,7 @@ func (listing *Listing) UpdateListings(update TblListing) error {
 		PaymentType:  update.PaymentType,
 		Price:        update.Price,
 		MembershipId: update.MembershipId,
+		Tag:          update.Tag,
 		TenantId:     update.TenantId,
 	}
 

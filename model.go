@@ -21,6 +21,7 @@ type Filter struct {
 type TblListing struct {
 	Id              int       `gorm:"primaryKey;auto_increment;type:serial"`
 	Title           string    `gorm:"type:character varying"`
+	Slug            string    `gorm:"type:character varying"`
 	Description     string    `gorm:"type:character varying"`
 	ContentType     string    `gorm:"type:character varying"`
 	ContentId       int       `gorm:"type:integer"`
@@ -39,6 +40,7 @@ type TblListing struct {
 	Price           int       `gorm:"type:integer"`
 	MembershipId    int       `gorm:"type:integer"`
 	TenantId        string    `gorm:"type:character varying"`
+	Tag             string    `gorm:"type:character varying"`
 	MembershipLevel string    `gorm:"-"`
 }
 
@@ -119,14 +121,14 @@ func (Listingmodel ListingModel) UpdateListing(listing TblListing, DB *gorm.DB) 
 
 	if listing.ImageName != "" {
 		fmt.Println("Update1::", listing)
-		if err := DB.Table("tbl_listings").Where("id=? and tenant_id=?", listing.Id, listing.TenantId).UpdateColumns(map[string]interface{}{"title": listing.Title, "description": listing.Description, "content_type": listing.ContentType, "content_id": listing.ContentId, "entry_id": listing.EntryId, "modified_on": listing.ModifiedOn, "modified_by": listing.ModifiedBy, "image_name": listing.ImageName, "image_path": listing.ImagePath, "payment_type": listing.PaymentType, "price": listing.Price, "membership_id": listing.MembershipId}).Error; err != nil {
+		if err := DB.Table("tbl_listings").Where("id=? and tenant_id=?", listing.Id, listing.TenantId).UpdateColumns(map[string]interface{}{"title": listing.Title, "slug": listing.Slug, "description": listing.Description, "content_type": listing.ContentType, "content_id": listing.ContentId, "entry_id": listing.EntryId, "modified_on": listing.ModifiedOn, "modified_by": listing.ModifiedBy, "image_name": listing.ImageName, "image_path": listing.ImagePath, "payment_type": listing.PaymentType, "price": listing.Price, "membership_id": listing.MembershipId, "tag": listing.Tag}).Error; err != nil {
 
 			return err
 		}
 
 	} else {
 		fmt.Println("Update2::", listing)
-		if err := DB.Table("tbl_listings").Where("id=? and tenant_id=?", listing.Id, listing.TenantId).UpdateColumns(map[string]interface{}{"title": listing.Title, "description": listing.Description, "content_type": listing.ContentType, "content_id": listing.ContentId, "entry_id": listing.EntryId, "modified_on": listing.ModifiedOn, "modified_by": listing.ModifiedBy, "payment_type": listing.PaymentType, "price": listing.Price, "membership_id": listing.MembershipId}).Error; err != nil {
+		if err := DB.Table("tbl_listings").Where("id=? and tenant_id=?", listing.Id, listing.TenantId).UpdateColumns(map[string]interface{}{"title": listing.Title, "slug": listing.Slug, "description": listing.Description, "content_type": listing.ContentType, "content_id": listing.ContentId, "entry_id": listing.EntryId, "modified_on": listing.ModifiedOn, "modified_by": listing.ModifiedBy, "payment_type": listing.PaymentType, "price": listing.Price, "membership_id": listing.MembershipId, "tag": listing.Tag}).Error; err != nil {
 
 			return err
 		}
