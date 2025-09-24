@@ -157,3 +157,14 @@ func (Listingmodel ListingModel) MultiSelectListingsDelete(listing *TblListing, 
 	return nil
 
 }
+
+func (Listingmodel ListingModel) FetchListingsByIds(ids []string, tenantid string, DB *gorm.DB) (listing []TblListing, err error) {
+
+	if err := DB.Debug().Table("tbl_listings").Where("id in (?) and tenant_id=?", ids, tenantid).Find(&listing).Error; err != nil {
+
+		return []TblListing{}, err
+	}
+
+	return listing, nil
+
+}
