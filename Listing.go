@@ -208,17 +208,33 @@ func (listing *Listing) MultiSelectDeleteListing(listingids []int, modifiedby in
 	return nil
 }
 
-func (listing *Listing) GetListingsByIds(ids []string, tenantid string) (listings []TblListing, err error) {
+func (listing *Listing) GetListingsByIds(ids []string, tag string, tenantid string) (listings []TblListing, err error) {
 
 	if Autherr := AuthandPermission(listing); Autherr != nil {
 
 		return []TblListing{}, Autherr
 	}
 
-	listingslist, err := Listingmodels.FetchListingsByIds(ids, tenantid, listing.DB)
+	listingslist, err := Listingmodels.FetchListingsByIds(ids, tag, tenantid, listing.DB)
 	if err != nil {
 
 		return []TblListing{}, err
+
+	}
+	return listingslist, nil
+}
+
+func (listing *Listing) GetListingBySlugName(ids []string, slugname string, tenantid string) (listings TblListing, err error) {
+
+	if Autherr := AuthandPermission(listing); Autherr != nil {
+
+		return TblListing{}, Autherr
+	}
+
+	listingslist, err := Listingmodels.FetchListingBySlugName(ids, slugname, tenantid, listing.DB)
+	if err != nil {
+
+		return TblListing{}, err
 
 	}
 	return listingslist, nil
