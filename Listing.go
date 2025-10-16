@@ -31,14 +31,19 @@ func (listing *Listing) ListingsList(limit, offset int, filter Filter, tenantid 
 		return []TblListing{}, 0, Autherr
 	}
 
-	if filter.ContentType == "Course" {
+	// if filter.ContentType == "Course" {
+
+	// 	filter.ContentType = strings.ToLower(filter.ContentType)
+
+	// } else if filter.ContentType == "Channel" {
+
+	// 	filter.ContentType = strings.ToLower(filter.ContentType)
+
+	// }
+
+	if filter.ContentType != "" {
 
 		filter.ContentType = strings.ToLower(filter.ContentType)
-
-	} else if filter.ContentType == "Channel" {
-
-		filter.ContentType = strings.ToLower(filter.ContentType)
-
 	}
 
 	if filter.PaymentType == "Price" {

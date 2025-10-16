@@ -163,7 +163,7 @@ func (Listingmodel ListingModel) FetchListingsByIds(ids []string, tag string, te
 		if err := DB.Table("tbl_listings").
 			Select("tbl_listings.*, tbl_mstr_membershiplevels.subscription_name as subscription_name, tbl_mstr_membershiplevels.initial_payment as initial_payment").
 			Joins("LEFT JOIN tbl_mstr_membershiplevels ON tbl_mstr_membershiplevels.id = tbl_listings.membership_id").
-			Where("tbl_listings.id IN (?) AND tbl_listings.tenant_id = ?", ids, tenantid).
+			Where("tbl_listings.id IN (?) AND tbl_listings.tenant_id = ? and tbl_listings.is_deleted=0", ids, tenantid).
 			Scan(&listing).Error; err != nil {
 
 			return []TblListing{}, err
@@ -173,7 +173,7 @@ func (Listingmodel ListingModel) FetchListingsByIds(ids []string, tag string, te
 		if err := DB.Table("tbl_listings").
 			Select("tbl_listings.*, tbl_mstr_membershiplevels.subscription_name as subscription_name, tbl_mstr_membershiplevels.initial_payment as initial_payment").
 			Joins("LEFT JOIN tbl_mstr_membershiplevels ON tbl_mstr_membershiplevels.id = tbl_listings.membership_id").
-			Where("tbl_listings.id IN (?) AND tbl_listings.tag=?  AND tbl_listings.tenant_id = ?", ids, tag, tenantid).
+			Where("tbl_listings.id IN (?) AND tbl_listings.tag=?  AND tbl_listings.tenant_id = ? and tbl_listings.is_deleted=0", ids, tag, tenantid).
 			Scan(&listing).Error; err != nil {
 
 			return []TblListing{}, err
