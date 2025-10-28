@@ -1,6 +1,7 @@
 package listing
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -36,11 +37,17 @@ type TblListing struct {
 	PaymentType      string    `gorm:"type:character varying"`
 	Price            int       `gorm:"type:integer"`
 	MembershipId     int       `gorm:"type:integer"`
+	Featured         int       `gorm:"type:integer"`
 	TenantId         string    `gorm:"type:character varying"`
 	Tag              string    `gorm:"type:character varying"`
 	MembershipLevel  string    `gorm:"-"`
 	SubscriptionName string    `gorm:"-:migration;<-:false"`
 	InitialPayment   string    `gorm:"-:migration;<-:false"`
+	ChannelID        int       `gorm:"-:migration;<-:false"`
+	EntryTitle       string    `gorm:"-:migration;<-:false"`
+	ChannelName      string    `gorm:"-:migration;<-:false"`
+	EntriesId        int       `gorm:"-:migration;<-:false"`
+	ChannelSlug      string    `gorm:"-:migration;<-:false"`
 }
 
 type ListingModel struct {
@@ -50,49 +57,69 @@ type ListingModel struct {
 
 var Listingmodels ListingModel
 
-func (Listingmodel ListingModel) ListingList(limit, offset int, filter Filter, tenantid string, DB *gorm.DB) (listing []TblListing, count int64, err error) {
+// UpdateListingStatus updates the is_active field of a listing by ID.
 
-	query := DB.Table("tbl_listings").Where("tbl_listings.is_deleted=0 and tbl_listings.tenant_id=?", tenantid).Order("created_on desc")
+func (Listingmodel ListingModel) UpdateListingStatus(limit, offset int, filter Filter, tenantid string, DB *gorm.DB, id int, status int) error {
+	// result := DB.Model(&TblListing{}).Where("id = ?", id).Update("featured", status)
 
+	result := DB.Table("tbl_listings").
+		Where("id = ? AND is_deleted = 0 AND tenant_id = ?", id, tenantid).
+		Updates(map[string]interface{}{
+			"featured": status,
+		})
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("no record found to update")
+	}
+	return nil
+}
+
+func (Listingmodel ListingModel) ListingList(limit, offset int, filter Filter, tenantid string, DB *gorm.DB) (results []TblListing, count int64, err error) {
+	fmt.Println("ListingList Entry")
+
+	query := DB.Table("tbl_listings AS l").
+		Select("l.*, ce.channel_id, ce.title AS entry_title, c.channel_name, ce.id, c.slug_name").
+		Joins("JOIN tbl_channel_entries AS ce ON ce.id = l.entry_id").
+		Joins("JOIN tbl_channels AS c ON c.id = ce.channel_id").
+		Where("l.is_deleted = 0 AND l.tenant_id = ?", tenantid).
+		Order("l.created_on DESC")
+
+	// Filters
 	if filter.Keyword != "" {
-
-		query = query.Where("LOWER(TRIM(tbl_listings.title)) like LOWER(TRIM(?))", "%"+filter.Keyword+"%")
-
+		query = query.Where("LOWER(TRIM(l.title)) LIKE LOWER(TRIM(?))", "%"+filter.Keyword+"%")
 	}
-
 	if filter.Title != "" {
-
-		query = query.Where("LOWER(TRIM(tbl_listings.title)) like LOWER(TRIM(?))", "%"+filter.Title+"%")
-
+		query = query.Where("LOWER(TRIM(l.title)) LIKE LOWER(TRIM(?))", "%"+filter.Title+"%")
 	}
-
 	if filter.ContentType != "" {
-
-		query = query.Where("tbl_listings.content_type=?", filter.ContentType)
-
+		query = query.Where("l.content_type = ?", filter.ContentType)
 	}
-
 	if filter.PaymentType != "" {
-
-		query = query.Where("tbl_listings.payment_type=?", filter.PaymentType)
-
+		query = query.Where("l.payment_type = ?", filter.PaymentType)
 	}
 
+	// Count total before pagination
+	if err = query.Count(&count).Error; err != nil {
+		fmt.Println("Error at count:", err)
+		return nil, 0, err
+	}
+
+	// Pagination
 	if limit != 0 {
-
-		query.Limit(limit).Offset(offset).Find(&listing)
-
-		return listing, count, nil
-
+		query = query.Limit(limit).Offset(offset)
 	}
 
-	query.Find(&listing).Count(&count)
-	if query.Error != nil {
-
-		return []TblListing{}, 0, query.Error
+	// Scan into custom struct
+	if err = query.Scan(&results).Error; err != nil {
+		fmt.Println("Error scanning results:", err)
+		return nil, 0, err
 	}
 
-	return listing, count, nil
+	fmt.Println("Listing list for table show:", results)
+	return results, count, nil
 }
 
 func (Listingmodel ListingModel) CreateListing(listing TblListing, DB *gorm.DB) error {
