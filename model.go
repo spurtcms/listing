@@ -3,6 +3,7 @@ package listing
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"gorm.io/datatypes"
@@ -17,45 +18,41 @@ type Filter struct {
 }
 
 type TblListing struct {
-	Id               int               `gorm:"primaryKey;auto_increment;type:serial"`
-	Title            string            `gorm:"type:character varying"`
-	Slug             string            `gorm:"type:character varying"`
-	Description      string            `gorm:"type:character varying"`
-	ContentType      string            `gorm:"type:character varying"`
-	ContentId        int               `gorm:"type:integer"`
-	EntryId          int               `gorm:"type:integer"`
-	IsDeleted        int               `gorm:"type:integer"`
-	DeletedOn        time.Time         `gorm:"type:timestamp without time zone;DEFAULT:NULL"`
-	DeletedBy        int               `gorm:"DEFAULT:NULL"`
-	IsActive         int               `gorm:"type:integer"`
-	CreatedOn        time.Time         `gorm:"type:timestamp without time zone"`
-	CreatedBy        int               `gorm:"type:integer"`
-	ModifiedOn       time.Time         `gorm:"type:timestamp without time zone;DEFAULT:NULL"`
-	ModifiedBy       int               `gorm:"DEFAULT:NULL;type:integer"`
-	ImageName        string            `gorm:"type:character varying"`
-	ImagePath        string            `gorm:"type:character varying"`
-	Url              string            `gorm:"type:character varying"`
-	PaymentType      string            `gorm:"type:character varying"`
-	Price            int               `gorm:"type:integer"`
-	MembershipId     int               `gorm:"type:integer"`
-	MultiplePrice    datatypes.JSONMap `gorm:"type:json"`
-	Featured         int               `gorm:"type:integer"`
-	TenantId         string            `gorm:"type:character varying"`
-	Tag              string            `gorm:"type:character varying"`
-	MembershipLevel  string            `gorm:"-"`
-	SubscriptionName string            `gorm:"-:migration;<-:false"`
-	InitialPayment   string            `gorm:"-:migration;<-:false"`
-	ChannelID        int               `gorm:"-:migration;<-:false"`
-	EntryTitle       string            `gorm:"-:migration;<-:false"`
-	ChannelName      string            `gorm:"-:migration;<-:false"`
-	EntriesId        int               `gorm:"-:migration;<-:false"`
-	ChannelSlug      string            `gorm:"-:migration;<-:false"`
-}
-
-type MultiplePrice struct {
-	Buynow    int `json:"Buynow"`
-	Integrate int `json:"Integrate"`
-	Support   int `json:"Support"`
+	Id               int            `gorm:"primaryKey;auto_increment;type:serial"`
+	Title            string         `gorm:"type:character varying"`
+	Slug             string         `gorm:"type:character varying"`
+	Description      string         `gorm:"type:character varying"`
+	ContentType      string         `gorm:"type:character varying"`
+	ContentId        int            `gorm:"type:integer"`
+	EntryId          int            `gorm:"type:integer"`
+	IsDeleted        int            `gorm:"type:integer"`
+	DeletedOn        time.Time      `gorm:"type:timestamp without time zone;DEFAULT:NULL"`
+	DeletedBy        int            `gorm:"DEFAULT:NULL"`
+	IsActive         int            `gorm:"type:integer"`
+	CreatedOn        time.Time      `gorm:"type:timestamp without time zone"`
+	CreatedBy        int            `gorm:"type:integer"`
+	ModifiedOn       time.Time      `gorm:"type:timestamp without time zone;DEFAULT:NULL"`
+	ModifiedBy       int            `gorm:"DEFAULT:NULL;type:integer"`
+	ImageName        string         `gorm:"type:character varying"`
+	ImagePath        string         `gorm:"type:character varying"`
+	VideoName        string         `gorm:"type:character varying"`
+	VideoPath        string         `gorm:"type:character varying"`
+	Url              string         `gorm:"type:character varying"`
+	PaymentType      string         `gorm:"type:character varying"`
+	Price            int            `gorm:"type:integer"`
+	MembershipId     int            `gorm:"type:integer"`
+	MultiplePrice    datatypes.JSON `gorm:"type:jsonb"`
+	Featured         int            `gorm:"type:integer"`
+	TenantId         string         `gorm:"type:character varying"`
+	Tag              string         `gorm:"type:character varying"`
+	MembershipLevel  string         `gorm:"-"`
+	SubscriptionName string         `gorm:"-:migration;<-:false"`
+	InitialPayment   string         `gorm:"-:migration;<-:false"`
+	ChannelID        int            `gorm:"-:migration;<-:false"`
+	EntryTitle       string         `gorm:"-:migration;<-:false"`
+	ChannelName      string         `gorm:"-:migration;<-:false"`
+	EntriesId        int            `gorm:"-:migration;<-:false"`
+	ChannelSlug      string         `gorm:"-:migration;<-:false"`
 }
 
 type ListingModel struct {
@@ -86,47 +83,57 @@ func (Listingmodel ListingModel) UpdateListingStatus(limit, offset int, filter F
 }
 
 func (Listingmodel ListingModel) ListingList(limit, offset int, filter Filter, tenantid string, DB *gorm.DB) (results []TblListing, count int64, err error) {
-	fmt.Println("ListingList Entry")
 
-	query := DB.Table("tbl_listings AS l").
-		Select("l.*, ce.channel_id, ce.title AS entry_title, c.channel_name, ce.id, c.slug_name").
+	query := DB.Debug().Table("tbl_listings AS l").
+		Select("l.*, ce.channel_id, ce.title AS entry_title, c.channel_name, ce.id as entry_id, c.slug_name").
 		Joins("JOIN tbl_channel_entries AS ce ON ce.id = l.entry_id").
 		Joins("JOIN tbl_channels AS c ON c.id = ce.channel_id").
 		Where("l.is_deleted = 0 AND l.tenant_id = ?", tenantid).
 		Order("l.created_on DESC")
 
-	// Filters
+	fmt.Println(filter, "filter details")
+
+	// ✅ Keyword Filter
 	if filter.Keyword != "" {
-		query = query.Where("LOWER(TRIM(l.title)) LIKE LOWER(TRIM(?))", "%"+filter.Keyword+"%")
+		like := "%" + strings.TrimSpace(filter.Keyword) + "%"
+		query = query.Where("(LOWER(TRIM(l.title)) LIKE LOWER(TRIM(?)) OR LOWER(TRIM(ce.title)) LIKE LOWER(TRIM(?)))",
+			like, like)
 	}
+
+	// ✅ Title Filter
 	if filter.Title != "" {
-		query = query.Where("LOWER(TRIM(l.title)) LIKE LOWER(TRIM(?))", "%"+filter.Title+"%")
+		like := "%" + strings.TrimSpace(filter.Title) + "%"
+		query = query.Where("(LOWER(TRIM(l.title)) LIKE LOWER(TRIM(?)) OR LOWER(TRIM(ce.title)) LIKE LOWER(TRIM(?)))",
+			like, like)
 	}
+
+	// ✅ ContentType Filter
 	if filter.ContentType != "" {
 		query = query.Where("l.content_type = ?", filter.ContentType)
 	}
+
+	// ✅ PaymentType Filter
 	if filter.PaymentType != "" {
 		query = query.Where("l.payment_type = ?", filter.PaymentType)
 	}
 
-	// Count total before pagination
+	// ✅ Count before pagination
 	if err = query.Count(&count).Error; err != nil {
 		fmt.Println("Error at count:", err)
 		return nil, 0, err
 	}
 
-	// Pagination
+	// ✅ Pagination
 	if limit != 0 {
 		query = query.Limit(limit).Offset(offset)
 	}
 
-	// Scan into custom struct
+	// ✅ Result scan
 	if err = query.Scan(&results).Error; err != nil {
 		fmt.Println("Error scanning results:", err)
 		return nil, 0, err
 	}
 
-	fmt.Println("Listing list for table show:", results)
 	return results, count, nil
 }
 
@@ -155,14 +162,14 @@ func (Listingmodel ListingModel) UpdateListing(listing TblListing, DB *gorm.DB) 
 
 	if listing.ImageName != "" {
 		fmt.Println("Update1::")
-		if err := DB.Table("tbl_listings").Where("id=? and tenant_id=?", listing.Id, listing.TenantId).UpdateColumns(map[string]interface{}{"title": listing.Title, "slug": listing.Slug, "description": listing.Description, "content_type": listing.ContentType, "content_id": listing.ContentId, "entry_id": listing.EntryId, "modified_on": listing.ModifiedOn, "modified_by": listing.ModifiedBy, "image_name": listing.ImageName, "image_path": listing.ImagePath, "url": listing.Url, "payment_type": listing.PaymentType, "price": listing.Price, "membership_id": listing.MembershipId, "tag": listing.Tag}).Error; err != nil {
+		if err := DB.Table("tbl_listings").Where("id=? and tenant_id=?", listing.Id, listing.TenantId).UpdateColumns(map[string]interface{}{"title": listing.Title, "slug": listing.Slug, "description": listing.Description, "content_type": listing.ContentType, "content_id": listing.ContentId, "entry_id": listing.EntryId, "modified_on": listing.ModifiedOn, "modified_by": listing.ModifiedBy, "image_name": listing.ImageName, "image_path": listing.ImagePath, "video_name": listing.VideoName, "video_path": listing.VideoPath, "url": listing.Url, "payment_type": listing.PaymentType, "price": listing.Price, "membership_id": listing.MembershipId, "multiple_price": listing.MultiplePrice, "tag": listing.Tag}).Error; err != nil {
 
 			return err
 		}
 
 	} else {
 
-		if err := DB.Table("tbl_listings").Where("id=? and tenant_id=?", listing.Id, listing.TenantId).UpdateColumns(map[string]interface{}{"title": listing.Title, "slug": listing.Slug, "description": listing.Description, "content_type": listing.ContentType, "content_id": listing.ContentId, "entry_id": listing.EntryId, "modified_on": listing.ModifiedOn, "modified_by": listing.ModifiedBy, "url": listing.Url, "payment_type": listing.PaymentType, "price": listing.Price, "membership_id": listing.MembershipId, "tag": listing.Tag}).Error; err != nil {
+		if err := DB.Table("tbl_listings").Where("id=? and tenant_id=?", listing.Id, listing.TenantId).UpdateColumns(map[string]interface{}{"title": listing.Title, "slug": listing.Slug, "description": listing.Description, "content_type": listing.ContentType, "content_id": listing.ContentId, "entry_id": listing.EntryId, "modified_on": listing.ModifiedOn, "modified_by": listing.ModifiedBy, "video_name": listing.VideoName, "video_path": listing.VideoPath, "url": listing.Url, "payment_type": listing.PaymentType, "price": listing.Price, "membership_id": listing.MembershipId, "multiple_price": listing.MultiplePrice, "tag": listing.Tag}).Error; err != nil {
 
 			return err
 		}
