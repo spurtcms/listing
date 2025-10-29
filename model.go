@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -16,38 +17,45 @@ type Filter struct {
 }
 
 type TblListing struct {
-	Id               int       `gorm:"primaryKey;auto_increment;type:serial"`
-	Title            string    `gorm:"type:character varying"`
-	Slug             string    `gorm:"type:character varying"`
-	Description      string    `gorm:"type:character varying"`
-	ContentType      string    `gorm:"type:character varying"`
-	ContentId        int       `gorm:"type:integer"`
-	EntryId          int       `gorm:"type:integer"`
-	IsDeleted        int       `gorm:"type:integer"`
-	DeletedOn        time.Time `gorm:"type:timestamp without time zone;DEFAULT:NULL"`
-	DeletedBy        int       `gorm:"DEFAULT:NULL"`
-	IsActive         int       `gorm:"type:integer"`
-	CreatedOn        time.Time `gorm:"type:timestamp without time zone"`
-	CreatedBy        int       `gorm:"type:integer"`
-	ModifiedOn       time.Time `gorm:"type:timestamp without time zone;DEFAULT:NULL"`
-	ModifiedBy       int       `gorm:"DEFAULT:NULL;type:integer"`
-	ImageName        string    `gorm:"type:character varying"`
-	ImagePath        string    `gorm:"type:character varying"`
-	Url              string    `gorm:"type:character varying"`
-	PaymentType      string    `gorm:"type:character varying"`
-	Price            int       `gorm:"type:integer"`
-	MembershipId     int       `gorm:"type:integer"`
-	Featured         int       `gorm:"type:integer"`
-	TenantId         string    `gorm:"type:character varying"`
-	Tag              string    `gorm:"type:character varying"`
-	MembershipLevel  string    `gorm:"-"`
-	SubscriptionName string    `gorm:"-:migration;<-:false"`
-	InitialPayment   string    `gorm:"-:migration;<-:false"`
-	ChannelID        int       `gorm:"-:migration;<-:false"`
-	EntryTitle       string    `gorm:"-:migration;<-:false"`
-	ChannelName      string    `gorm:"-:migration;<-:false"`
-	EntriesId        int       `gorm:"-:migration;<-:false"`
-	ChannelSlug      string    `gorm:"-:migration;<-:false"`
+	Id               int               `gorm:"primaryKey;auto_increment;type:serial"`
+	Title            string            `gorm:"type:character varying"`
+	Slug             string            `gorm:"type:character varying"`
+	Description      string            `gorm:"type:character varying"`
+	ContentType      string            `gorm:"type:character varying"`
+	ContentId        int               `gorm:"type:integer"`
+	EntryId          int               `gorm:"type:integer"`
+	IsDeleted        int               `gorm:"type:integer"`
+	DeletedOn        time.Time         `gorm:"type:timestamp without time zone;DEFAULT:NULL"`
+	DeletedBy        int               `gorm:"DEFAULT:NULL"`
+	IsActive         int               `gorm:"type:integer"`
+	CreatedOn        time.Time         `gorm:"type:timestamp without time zone"`
+	CreatedBy        int               `gorm:"type:integer"`
+	ModifiedOn       time.Time         `gorm:"type:timestamp without time zone;DEFAULT:NULL"`
+	ModifiedBy       int               `gorm:"DEFAULT:NULL;type:integer"`
+	ImageName        string            `gorm:"type:character varying"`
+	ImagePath        string            `gorm:"type:character varying"`
+	Url              string            `gorm:"type:character varying"`
+	PaymentType      string            `gorm:"type:character varying"`
+	Price            int               `gorm:"type:integer"`
+	MembershipId     int               `gorm:"type:integer"`
+	MultiplePrice    datatypes.JSONMap `gorm:"type:json"`
+	Featured         int               `gorm:"type:integer"`
+	TenantId         string            `gorm:"type:character varying"`
+	Tag              string            `gorm:"type:character varying"`
+	MembershipLevel  string            `gorm:"-"`
+	SubscriptionName string            `gorm:"-:migration;<-:false"`
+	InitialPayment   string            `gorm:"-:migration;<-:false"`
+	ChannelID        int               `gorm:"-:migration;<-:false"`
+	EntryTitle       string            `gorm:"-:migration;<-:false"`
+	ChannelName      string            `gorm:"-:migration;<-:false"`
+	EntriesId        int               `gorm:"-:migration;<-:false"`
+	ChannelSlug      string            `gorm:"-:migration;<-:false"`
+}
+
+type MultiplePrice struct {
+	Buynow    int `json:"Buynow"`
+	Integrate int `json:"Integrate"`
+	Support   int `json:"Support"`
 }
 
 type ListingModel struct {
