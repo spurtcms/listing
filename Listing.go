@@ -75,11 +75,16 @@ func (listing *Listing) ListingsList(limit, offset int, filter Filter, tenantid 
 		filter.ContentType = strings.ToLower(filter.ContentType)
 	}
 
-	if filter.PaymentType == "Price" {
+	switch filter.PaymentType {
+	case "Price":
 
 		filter.PaymentType = strings.ToLower(filter.PaymentType)
 
-	} else if filter.PaymentType == "Membership" {
+	case "Membership":
+
+		filter.PaymentType = strings.ToLower(filter.PaymentType)
+
+	case "Multipleprice":
 
 		filter.PaymentType = strings.ToLower(filter.PaymentType)
 
