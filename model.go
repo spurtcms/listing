@@ -248,32 +248,25 @@ func (Listingmodel ListingModel) MultiSelectListingsDelete(listing *TblListing, 
 
 }
 
-func (Listingmodel ListingModel) FetchListingsByIds(ids []string, tag string, tenantid string, DB *gorm.DB) (listing []TblListing, err error) {
-
-	if tag == "" {
-
-		if err := DB.Table("tbl_listings").
-			Select("tbl_listings.*, tbl_mstr_membershiplevels.subscription_name as subscription_name, tbl_mstr_membershiplevels.initial_payment as initial_payment").
-			Joins("LEFT JOIN tbl_mstr_membershiplevels ON tbl_mstr_membershiplevels.id = tbl_listings.membership_id").
-			Where("tbl_listings.id IN (?) AND tbl_listings.tenant_id = ? and tbl_listings.is_deleted=0", ids, tenantid).
-			Scan(&listing).Error; err != nil {
-
-			return []TblListing{}, err
-		}
-	} else if tag != "" {
-
-		if err := DB.Table("tbl_listings").
-			Select("tbl_listings.*, tbl_mstr_membershiplevels.subscription_name as subscription_name, tbl_mstr_membershiplevels.initial_payment as initial_payment").
-			Joins("LEFT JOIN tbl_mstr_membershiplevels ON tbl_mstr_membershiplevels.id = tbl_listings.membership_id").
-			Where("tbl_listings.id IN (?) AND tbl_listings.tag=?  AND tbl_listings.tenant_id = ? and tbl_listings.is_deleted=0", ids, tag, tenantid).
-			Scan(&listing).Error; err != nil {
-
-			return []TblListing{}, err
-		}
-	}
-
-	return listing, nil
-
+func (Listingmodel ListingModel) FetchListingsByIds(ids []string, tag string, tenantid string, DB *gorm.DB, profile bool) (listing []TblListing, err error) {
+    baseQuery := DB.Table("tbl_listings").
+        Select("tbl_listings.*, tbl_mstr_membershiplevels.subscription_name as subscription_name, tbl_mstr_membershiplevels.initial_payment as initial_payment").
+        Joins("LEFT JOIN tbl_mstr_membershiplevels ON tbl_mstr_membershiplevels.id = tbl_listings.membership_id").
+        Where("tbl_listings.id IN (?) AND tbl_listings.tenant_id = ? AND tbl_listings.is_deleted = 0", ids, tenantid)
+ 
+    if tag != "" {
+        baseQuery = baseQuery.Where("tbl_listings.tag = ?", tag)
+    }
+ 
+    if !profile {
+        baseQuery = baseQuery.Joins("INNER JOIN tbl_channel_entries ON tbl_channel_entries.id = tbl_listings.entry_id").
+            Where("tbl_channel_entries.access_type = ? OR tbl_channel_entries.access_type IS NULL", "every_one")
+    }
+ 
+    if err := baseQuery.Scan(&listing).Error; err != nil {
+        return []TblListing{}, err
+    }
+    return listing, nil
 }
 
 func (Listingmodel ListingModel) FetchListings(tag string, tenantid string, DB *gorm.DB) (listing []TblListing, err error) {
