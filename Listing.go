@@ -271,18 +271,50 @@ func (listing *Listing) GetListingsByIds(ids []string, tag string, tenantid stri
 	return listingslist, nil
 }
 
-func (listing *Listing) GetListingBySlugName(ids []string, slugname string, tenantid string) (listings TblListing, err error) {
+func (listing *Listing) GetListings(tag string, tenantid string) (listings []TblListing, err error) {
+
+	if Autherr := AuthandPermission(listing); Autherr != nil {
+
+		return []TblListing{}, Autherr
+	}
+
+	listingslist, err := Listingmodels.FetchListings(tag, tenantid, listing.DB)
+	if err != nil {
+
+		return []TblListing{}, err
+
+	}
+	return listingslist, nil
+}
+
+func (listing *Listing) GetListingBySlugName( slugname string, tenantid string) (listings TblListing, err error) {
 
 	if Autherr := AuthandPermission(listing); Autherr != nil {
 
 		return TblListing{}, Autherr
 	}
 
-	listingslist, err := Listingmodels.FetchListingBySlugName(ids, slugname, tenantid, listing.DB)
+	listingslist, err := Listingmodels.FetchListingBySlugName(slugname, tenantid, listing.DB)
 	if err != nil {
 
 		return TblListing{}, err
 
 	}
 	return listingslist, nil
+}
+
+// Check category name already exists
+func (listing *Listing) CheckListingsName(listingid int, listingname string, tenantid string) (bool, error) {
+
+	var listings TblListing
+
+	err := Listingmodels.CheckListingsName(listings, listingid, listingname, tenantid, listing.DB)
+
+	if err != nil {
+
+		return false, err
+
+	}
+
+	return true, nil
 }
