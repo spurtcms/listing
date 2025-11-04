@@ -16,6 +16,7 @@ type Filter struct {
 	Title       string
 	ContentType string
 	PaymentType string
+	Tag         string
 }
 
 type TblListing struct {
@@ -156,7 +157,9 @@ func (Listingmodel ListingModel) ListingList(limit, offset int, filter Filter, t
 	if filter.PaymentType != "" {
 		query = query.Where("l.payment_type = ?", filter.PaymentType)
 	}
-
+	if filter.Tag != "" {
+		query = query.Where("l.tag = ?", filter.Tag)
+	}
 	//  Count before pagination
 	if err = query.Count(&count).Error; err != nil {
 		fmt.Println("Error at count:", err)
