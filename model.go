@@ -58,6 +58,7 @@ type TblListing struct {
 	CategoryName          string                `gorm:"-:migration;<-:false"`
 	CourseTitle           string                `gorm:"-:migration;<-:false"`
 	MultiplePriceCategory MultiplePriceCategory `gorm:"-"`
+	TagSlug               string                `gorm:"-"`
 }
 type MultiplePriceCategory struct {
 	BuyNow    int `json:"BuyNow"`
@@ -273,7 +274,11 @@ func (Listingmodel ListingModel) GetListingsList(Input ListingInput, DB *gorm.DB
 		baseQuery = baseQuery.Where("tbl_listings.id IN (?) AND tbl_listings.tenant_id = ? AND tbl_listings.is_deleted = 0", Input.ListingIds, Input.TenantId)
 	}
 	if Input.Tag != "" {
-		baseQuery = baseQuery.Where("tbl_listings.tag = ?", Input.Tag)
+		newtag := strings.ToLower(strings.ReplaceAll(Input.Tag, " ", "-"))
+		baseQuery = baseQuery.Where(
+			"LOWER(REPLACE(tbl_listings.tag, ' ', '-')) LIKE ?",
+			"%"+newtag+"%",
+		)
 	}
 
 	if !Input.Profile {
@@ -299,8 +304,6 @@ func (Listingmodel ListingModel) GetListingsList(Input ListingInput, DB *gorm.DB
 	}
 	return listing, nil
 }
-
-
 
 func (Listingmodel ListingModel) FetchListingBySlugName(slugname string, tenantid string, DB *gorm.DB) (listing TblListing, err error) {
 
