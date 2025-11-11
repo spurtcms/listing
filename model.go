@@ -59,6 +59,7 @@ type TblListing struct {
 	CourseTitle           string                `gorm:"-:migration;<-:false"`
 	MultiplePriceCategory MultiplePriceCategory `gorm:"-"`
 	TagSlug               string                `gorm:"-"`
+	EntrySlug             string                `gorm:"-:migration;<-:false"`
 }
 type MultiplePriceCategory struct {
 	BuyNow    int `json:"BuyNow"`
@@ -265,8 +266,9 @@ func (Listingmodel ListingModel) MultiSelectListingsDelete(listing *TblListing, 
 
 func (Listingmodel ListingModel) GetListingsList(Input ListingInput, DB *gorm.DB) (listing []TblListing, err error) {
 	baseQuery := DB.Debug().Table("tbl_listings").
-		Select("tbl_listings.*, tbl_mstr_membershiplevels.subscription_name as subscription_name, tbl_mstr_membershiplevels.initial_payment as initial_payment").
+		Select("tbl_listings.*, tbl_mstr_membershiplevels.subscription_name as subscription_name, tbl_mstr_membershiplevels.initial_payment as initial_payment,ce1.slug as entry_slug").
 		Joins("LEFT JOIN tbl_mstr_membershiplevels ON tbl_mstr_membershiplevels.id = tbl_listings.membership_id").
+		Joins("LEFT JOIN tbl_channel_entries ce1 ON ce1.id = tbl_listings.entry_id").
 		Where(" tbl_listings.tenant_id = ? AND tbl_listings.is_deleted = 0", Input.TenantId)
 
 	if len(Input.ListingIds) > 0 {
@@ -282,8 +284,9 @@ func (Listingmodel ListingModel) GetListingsList(Input ListingInput, DB *gorm.DB
 	}
 
 	if !Input.Profile {
-		baseQuery = baseQuery.Joins("INNER JOIN tbl_channel_entries ON tbl_channel_entries.id = tbl_listings.entry_id").
-			Where("tbl_channel_entries.access_type = ? OR tbl_channel_entries.access_type IS NULL", "every_one")
+		baseQuery = baseQuery.Joins("INNER JOIN tbl_channel_entries ce2 ON ce2.id = tbl_listings.entry_id").
+			Where("ce2.access_type = ? OR ce2.access_type IS NULL", "every_one")
+
 	}
 	if Input.Featured {
 
@@ -307,13 +310,24 @@ func (Listingmodel ListingModel) GetListingsList(Input ListingInput, DB *gorm.DB
 
 func (Listingmodel ListingModel) FetchListingBySlugName(slugname string, tenantid string, DB *gorm.DB) (listing TblListing, err error) {
 
+	var entry struct {
+		ID int
+	}
+	// Step 1: Find Channel Entry by slugname
+	if err := DB.Table("tbl_channel_entries").
+		Select("id").
+		Where("slug = ?", slugname).
+		First(&entry).Error; err != nil {
+		return TblListing{}, err // Not found or query error
+	}
+
+	// Step 2: Find Listing by entry_id and tenant_id, joining membership level as needed
 	if err := DB.Table("tbl_listings").
 		Select("tbl_listings.*, tbl_mstr_membershiplevels.subscription_name as subscription_name, tbl_mstr_membershiplevels.initial_payment as initial_payment").
 		Joins("LEFT JOIN tbl_mstr_membershiplevels ON tbl_mstr_membershiplevels.id = tbl_listings.membership_id").
-		Where(" tbl_listings.slug=? AND tbl_listings.tenant_id = ?", slugname, tenantid).
+		Where("tbl_listings.entry_id = ? AND tbl_listings.tenant_id = ? and tbl_listings.is_deleted=0", entry.ID, tenantid).
 		First(&listing).Error; err != nil {
-
-		return TblListing{}, err
+		return TblListing{}, err // Not found or query error
 	}
 
 	return listing, nil
