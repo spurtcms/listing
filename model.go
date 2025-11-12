@@ -292,7 +292,9 @@ func (Listingmodel ListingModel) GetListingsList(Input ListingInput, DB *gorm.DB
 
 		baseQuery = baseQuery.Where("tbl_listings.featured=1")
 	}
-
+	if Input.Filter.Keyword != "" {
+		baseQuery = baseQuery.Where(`lower(tbl_listings.title) LIKE lower(?)`, "%"+Input.Filter.Keyword+"%")
+	}
 	if Input.Limit > 0 {
 
 		baseQuery = baseQuery.Limit(Input.Limit)
