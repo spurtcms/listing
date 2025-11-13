@@ -157,8 +157,8 @@ func (Listingmodel ListingModel) ListingList(limit, offset int, filter Filter, t
 	//  Title Filter
 	if filter.Title != "" {
 		like := "%" + strings.TrimSpace(filter.Title) + "%"
-		query = query.Where("(LOWER(TRIM(l.title)) LIKE LOWER(TRIM(?)) OR LOWER(TRIM(ce.title)) LIKE LOWER(TRIM(?)))",
-			like, like)
+		query = query.Where("(LOWER(TRIM(l.title)) LIKE LOWER(TRIM(?)) OR LOWER(TRIM(ce.title)) LIKE LOWER(TRIM(?))) or OR LOWER(TRIM(co.title)) LIKE LOWER(TRIM(?)))",
+			like, like, like)
 	}
 
 	//  ContentType Filter
