@@ -302,3 +302,29 @@ func (listing *Listing) CheckListingsName(listingid int, listingname string, ten
 
 	return true, nil
 }
+
+func (listing *Listing) FetchListingsTags(listingids []int, tenantid string) ([]TblListingTags, error) {
+
+	taglist, err := Listingmodels.FetchTagsByListings(listingids, tenantid, listing.DB)
+
+	if err != nil {
+
+		return []TblListingTags{}, err
+
+	}
+
+	return taglist, nil
+}
+
+func (listing *Listing) FetchListingsTagsById(listingid int, tenantid string) ([]TblListingTags, error) {
+
+	taglist, err := Listingmodels.FetchTagsByListingId(listingid, tenantid, listing.DB)
+
+	if err != nil {
+
+		return []TblListingTags{}, err
+
+	}
+
+	return taglist, nil
+}

@@ -61,6 +61,13 @@ type TblListing struct {
 	TagSlug               string                `gorm:"-"`
 	EntrySlug             string                `gorm:"-:migration;<-:false"`
 }
+
+type TblListingTags struct {
+	Id        int    `gorm:"primaryKey;auto_increment;type:serial"`
+	TagName   string `gorm:"type:character varying"`
+	ListingId int    `gorm:"type:integer"`
+	TenantId  string `gorm:"type:character varying"`
+}
 type MultiplePriceCategory struct {
 	BuyNow    int `json:"BuyNow"`
 	Integrate int `json:"Integrate"`
@@ -209,6 +216,26 @@ func (Listingmodel ListingModel) CreateListing(listing TblListing, DB *gorm.DB) 
 		return err
 	}
 
+	tags := strings.Split(listing.Tag, ",")
+
+	for _, t := range tags {
+
+		tagName := strings.TrimSpace(t)
+		if tagName == "" {
+			continue
+		}
+
+		createtags := TblListingTags{
+			TagName:   tagName,
+			ListingId: listing.Id,
+			TenantId:  listing.TenantId,
+		}
+
+		if err := DB.Table("tbl_listing_tags").Create(&createtags).Error; err != nil {
+			return err
+		}
+	}
+
 	return nil
 
 }
@@ -224,6 +251,57 @@ func (Listingmodel ListingModel) EditListing(id int, tenantid string, DB *gorm.D
 }
 
 func (Listingmodel ListingModel) UpdateListing(listing TblListing, DB *gorm.DB) error {
+
+	newTags := strings.Split(listing.Tag, ",")
+	cleanNewTags := map[string]bool{}
+
+	for _, t := range newTags {
+		tag := strings.TrimSpace(t)
+		if tag != "" {
+			cleanNewTags[tag] = true
+		}
+	}
+
+	// 2️⃣ Get existing tags from DB
+	var oldTags []TblListingTags
+	if err := DB.Table("tbl_listing_tags").Where("listing_id = ?", listing.Id).Find(&oldTags).Error; err != nil {
+		return err
+	}
+
+	// 3️⃣ HARD DELETE tags that are removed
+	for _, old := range oldTags {
+		if !cleanNewTags[old.TagName] {
+			// Delete old tag
+			if err := DB.Table("tbl_listing_tags").Where("id = ?", old.Id).Delete(nil).Error; err != nil {
+				return err
+			}
+		}
+	}
+
+	// 4️⃣ INSERT new tags that are not in old list
+	for tag := range cleanNewTags {
+		exists := false
+
+		for _, old := range oldTags {
+			if old.TagName == tag {
+				exists = true
+				break
+			}
+		}
+
+		// Insert if tag does not exist
+		if !exists {
+			newTag := TblListingTags{
+				TagName:   tag,
+				ListingId: listing.Id,
+				TenantId:  listing.TenantId,
+			}
+
+			if err := DB.Table("tbl_listing_tags").Create(&newTag).Error; err != nil {
+				return err
+			}
+		}
+	}
 
 	if listing.ImageName != "" {
 		fmt.Println("Update1::")
@@ -354,4 +432,24 @@ func (Listingmodel ListingModel) CheckListingsName(listings TblListing, listings
 	}
 
 	return nil
+}
+
+func (Listingmodel ListingModel) FetchTagsByListings(listingids []int, tenantid string, DB *gorm.DB) ([]TblListingTags, error) {
+
+	var tags []TblListingTags
+	if err := DB.Debug().Table("tbl_listing_tags").Where("listing_id IN (?) and tenant_id=?", listingids, tenantid).Find(&tags).Error; err != nil {
+		return []TblListingTags{}, err
+	}
+
+	return tags, nil
+}
+
+func (Listingmodel ListingModel) FetchTagsByListingId(listingid int, tenantid string, DB *gorm.DB) ([]TblListingTags, error) {
+
+	var tags []TblListingTags
+	if err := DB.Debug().Table("tbl_listing_tags").Where("listing_id =? and tenant_id=?", listingid, tenantid).Find(&tags).Error; err != nil {
+		return []TblListingTags{}, err
+	}
+
+	return tags, nil
 }
