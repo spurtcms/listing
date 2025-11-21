@@ -348,7 +348,7 @@ func (Listingmodel ListingModel) GetListingsList(Input ListingInput, DB *gorm.DB
 		Select("tbl_listings.*, tbl_mstr_membershiplevels.subscription_name as subscription_name, tbl_mstr_membershiplevels.initial_payment as initial_payment,ce1.slug as entry_slug").
 		Joins("LEFT JOIN tbl_mstr_membershiplevels ON tbl_mstr_membershiplevels.id = tbl_listings.membership_id").
 		Joins("LEFT JOIN tbl_channel_entries ce1 ON ce1.id = tbl_listings.entry_id").
-		Where(" tbl_listings.tenant_id = ? AND tbl_listings.is_deleted = 0 and ce2.is_deleted=0 and ce2.status=1", Input.TenantId)
+		Where(" tbl_listings.tenant_id = ? AND tbl_listings.is_deleted = 0 and ce1.is_deleted=0 and ce1.status=1", Input.TenantId)
 
 	if len(Input.ListingIds) > 0 {
 
