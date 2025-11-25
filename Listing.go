@@ -133,6 +133,7 @@ func (listing *Listing) CreateListing(create TblListing) error {
 		MultiplePrice: create.MultiplePrice,
 		Tag:           create.Tag,
 		TenantId:      create.TenantId,
+		CategoryId:    create.CategoryId,
 	}
 
 	err := Listingmodels.CreateListing(Create, listing.DB)
@@ -194,6 +195,7 @@ func (listing *Listing) UpdateListings(update TblListing) error {
 		MultiplePrice: update.MultiplePrice,
 		Tag:           update.Tag,
 		TenantId:      update.TenantId,
+		CategoryId:    update.CategoryId,
 	}
 
 	err := Listingmodels.UpdateListing(Update, listing.DB)

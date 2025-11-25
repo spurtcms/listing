@@ -60,6 +60,7 @@ type TblListing struct {
 	MultiplePriceCategory MultiplePriceCategory `gorm:"-"`
 	TagSlug               string                `gorm:"-"`
 	EntrySlug             string                `gorm:"-:migration;<-:false"`
+	CategoryId            int                   `gorm:"type:integer"`
 }
 
 type TblListingTags struct {
@@ -88,6 +89,7 @@ type ListingInput struct {
 	Filter     Filter
 	TenantId   string
 	Featured   bool
+	CategoryId int
 }
 
 var Listingmodels ListingModel
@@ -305,15 +307,15 @@ func (Listingmodel ListingModel) UpdateListing(listing TblListing, DB *gorm.DB) 
 	}
 
 	if listing.ImageName != "" {
-		fmt.Println("Update1::")
-		if err := DB.Table("tbl_listings").Where("id=? and tenant_id=?", listing.Id, listing.TenantId).UpdateColumns(map[string]interface{}{"title": listing.Title, "slug": listing.Slug, "description": listing.Description, "content_type": listing.ContentType, "content_id": listing.ContentId, "entry_id": listing.EntryId, "modified_on": listing.ModifiedOn, "modified_by": listing.ModifiedBy, "image_name": listing.ImageName, "image_path": listing.ImagePath, "video_name": listing.VideoName, "video_path": listing.VideoPath, "url": listing.Url, "payment_type": listing.PaymentType, "price": listing.Price, "membership_id": listing.MembershipId, "multiple_price": listing.MultiplePrice, "tag": listing.Tag}).Error; err != nil {
+
+		if err := DB.Table("tbl_listings").Where("id=? and tenant_id=?", listing.Id, listing.TenantId).UpdateColumns(map[string]interface{}{"title": listing.Title, "slug": listing.Slug, "description": listing.Description, "content_type": listing.ContentType, "content_id": listing.ContentId, "entry_id": listing.EntryId, "modified_on": listing.ModifiedOn, "modified_by": listing.ModifiedBy, "image_name": listing.ImageName, "image_path": listing.ImagePath, "video_name": listing.VideoName, "video_path": listing.VideoPath, "url": listing.Url, "payment_type": listing.PaymentType, "price": listing.Price, "membership_id": listing.MembershipId, "multiple_price": listing.MultiplePrice, "tag": listing.Tag, "category_id": listing.CategoryId}).Error; err != nil {
 
 			return err
 		}
 
 	} else {
 
-		if err := DB.Table("tbl_listings").Where("id=? and tenant_id=?", listing.Id, listing.TenantId).UpdateColumns(map[string]interface{}{"title": listing.Title, "slug": listing.Slug, "description": listing.Description, "content_type": listing.ContentType, "content_id": listing.ContentId, "entry_id": listing.EntryId, "modified_on": listing.ModifiedOn, "modified_by": listing.ModifiedBy, "video_name": listing.VideoName, "video_path": listing.VideoPath, "url": listing.Url, "payment_type": listing.PaymentType, "price": listing.Price, "membership_id": listing.MembershipId, "multiple_price": listing.MultiplePrice, "tag": listing.Tag}).Error; err != nil {
+		if err := DB.Table("tbl_listings").Where("id=? and tenant_id=?", listing.Id, listing.TenantId).UpdateColumns(map[string]interface{}{"title": listing.Title, "slug": listing.Slug, "description": listing.Description, "content_type": listing.ContentType, "content_id": listing.ContentId, "entry_id": listing.EntryId, "modified_on": listing.ModifiedOn, "modified_by": listing.ModifiedBy, "video_name": listing.VideoName, "video_path": listing.VideoPath, "url": listing.Url, "payment_type": listing.PaymentType, "price": listing.Price, "membership_id": listing.MembershipId, "multiple_price": listing.MultiplePrice, "tag": listing.Tag, "category_id": listing.CategoryId}).Error; err != nil {
 
 			return err
 		}
@@ -350,10 +352,17 @@ func (Listingmodel ListingModel) GetListingsList(Input ListingInput, DB *gorm.DB
 		Joins("LEFT JOIN tbl_channel_entries ce1 ON ce1.id = tbl_listings.entry_id").
 		Where(" tbl_listings.tenant_id = ? AND tbl_listings.is_deleted = 0 and ce1.is_deleted=0 and ce1.status=1", Input.TenantId)
 
-	if len(Input.ListingIds) > 0 {
-
-		baseQuery = baseQuery.Where("tbl_listings.id IN (?) AND tbl_listings.tenant_id = ? AND tbl_listings.is_deleted = 0", Input.ListingIds, Input.TenantId)
+	validIDs := []string{}
+	for _, id := range Input.ListingIds {
+		if id != "" {
+			validIDs = append(validIDs, id)
+		}
 	}
+
+	if len(validIDs) > 0 {
+		baseQuery = baseQuery.Where("tbl_listings.id IN (?) AND tbl_listings.tenant_id = ? AND tbl_listings.is_deleted = 0", validIDs, Input.TenantId)
+	}
+
 	if Input.Tag != "" {
 		newtag := strings.ToLower(strings.ReplaceAll(Input.Tag, " ", "-"))
 		baseQuery = baseQuery.Where(
@@ -373,6 +382,11 @@ func (Listingmodel ListingModel) GetListingsList(Input ListingInput, DB *gorm.DB
 	}
 	if Input.Filter.Keyword != "" {
 		baseQuery = baseQuery.Where(`lower(tbl_listings.title) LIKE lower(?)`, "%"+Input.Filter.Keyword+"%")
+	}
+
+	if Input.CategoryId != 0 {
+
+		baseQuery = baseQuery.Where("tbl_listings.category_id=?", Input.CategoryId)
 	}
 	if Input.Limit > 0 {
 
