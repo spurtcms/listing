@@ -468,3 +468,13 @@ func (Listingmodel ListingModel) FetchTagsByListingId(listingid int, tenantid st
 
 	return tags, nil
 }
+
+func (Listingmodel ListingModel) FetchListingsByTitle(Title, tenantid string, DB *gorm.DB) (listinglist TblListing, err error) {
+
+	if err := DB.Table("tbl_listings").Where("title=? and tenant_id=? and is_deleted=0", Title, tenantid).First(&listinglist).Error; err != nil {
+
+		return TblListing{}, err
+	}
+
+	return listinglist, nil
+}

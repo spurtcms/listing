@@ -330,3 +330,19 @@ func (listing *Listing) FetchListingsTagsById(listingid int, tenantid string) ([
 
 	return taglist, nil
 }
+
+func (listing *Listing) FetchListingsByTitle(title, tenantid string) (list TblListing, err error) {
+
+	if Autherr := AuthandPermission(listing); Autherr != nil {
+
+		return TblListing{}, Autherr
+	}
+
+	list, err = Listingmodels.FetchListingsByTitle(title, tenantid, listing.DB)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return list, nil
+
+}
