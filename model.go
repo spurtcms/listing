@@ -83,15 +83,16 @@ type ListingModel struct {
 }
 
 type ListingInput struct {
-	Limit      int
-	Offset     int
-	ListingIds []string
-	Tag        string
-	Profile    bool
-	Filter     Filter
-	TenantId   string
-	Featured   bool
-	CategoryId int
+    Limit      int
+    Offset     int
+    ListingIds []string
+    Tag        string
+    Profile    bool
+    Filter     Filter
+    TenantId   string
+    Featured   bool
+    CategoryId int
+    UserRoleId int
 }
 
 var Listingmodels ListingModel
@@ -347,63 +348,71 @@ func (Listingmodel ListingModel) MultiSelectListingsDelete(listing *TblListing, 
 
 }
 
+
 func (Listingmodel ListingModel) GetListingsList(Input ListingInput, DB *gorm.DB) (listing []TblListing, err error) {
-	baseQuery := DB.Debug().Table("tbl_listings").
-		Select("tbl_listings.*, tbl_mstr_membershiplevels.subscription_name as subscription_name, tbl_mstr_membershiplevels.initial_payment as initial_payment,ce1.slug as entry_slug,ce1.tech_stack_logos as tech_stack_logos").
-		Joins("LEFT JOIN tbl_mstr_membershiplevels ON tbl_mstr_membershiplevels.id = tbl_listings.membership_id").
-		Joins("LEFT JOIN tbl_channel_entries ce1 ON ce1.id = tbl_listings.entry_id").
-		Where(" tbl_listings.tenant_id = ? AND tbl_listings.is_deleted = 0 and ce1.is_deleted=0 and ce1.status=1", Input.TenantId)
-
-	validIDs := []string{}
-	for _, id := range Input.ListingIds {
-		if id != "" {
-			validIDs = append(validIDs, id)
-		}
-	}
-
-	if len(validIDs) > 0 {
-		baseQuery = baseQuery.Where("tbl_listings.id IN (?) AND tbl_listings.tenant_id = ? AND tbl_listings.is_deleted = 0", validIDs, Input.TenantId)
-	}
-
-	if Input.Tag != "" {
-		newtag := strings.ToLower(strings.ReplaceAll(Input.Tag, " ", "-"))
-		baseQuery = baseQuery.Where(
-			"LOWER(REPLACE(tbl_listings.tag, ' ', '-')) LIKE ?",
-			"%"+newtag+"%",
-		)
-	}
-
-	if !Input.Profile {
-		baseQuery = baseQuery.Joins("INNER JOIN tbl_channel_entries ce2 ON ce2.id = tbl_listings.entry_id").
-			Where("ce2.access_type = ? OR ce2.access_type IS NULL", "every_one")
-
-	}
-	if Input.Featured {
-
-		baseQuery = baseQuery.Where("tbl_listings.featured=1")
-	}
-	if Input.Filter.Keyword != "" {
-		baseQuery = baseQuery.Where(`lower(tbl_listings.title) LIKE lower(?)`, "%"+Input.Filter.Keyword+"%")
-	}
-
-	if Input.CategoryId != 0 {
-
-		baseQuery = baseQuery.Where("tbl_listings.category_id=?", Input.CategoryId)
-	}
-	if Input.Limit > 0 {
-
-		baseQuery = baseQuery.Limit(Input.Limit)
-	}
-
-	if Input.Offset > -1 {
-
-		baseQuery = baseQuery.Offset(Input.Offset)
-	}
-	if err := baseQuery.Scan(&listing).Error; err != nil {
-		return []TblListing{}, err
-	}
-	return listing, nil
+    baseQuery := DB.Debug().Table("tbl_listings").
+        Select("tbl_listings.*, tbl_mstr_membershiplevels.subscription_name as subscription_name, tbl_mstr_membershiplevels.initial_payment as initial_payment,ce1.slug as entry_slug,ce1.tech_stack_logos as tech_stack_logos").
+        Joins("LEFT JOIN tbl_mstr_membershiplevels ON tbl_mstr_membershiplevels.id = tbl_listings.membership_id").
+        Joins("LEFT JOIN tbl_channel_entries ce1 ON ce1.id = tbl_listings.entry_id").
+        Where(" tbl_listings.tenant_id = ? AND tbl_listings.is_deleted = 0 and ce1.is_deleted=0 and ce1.status=1", Input.TenantId)
+ 
+    validIDs := []string{}
+    for _, id := range Input.ListingIds {
+        if id != "" {
+            validIDs = append(validIDs, id)
+        }
+    }
+ 
+    if len(validIDs) > 0 {
+        baseQuery = baseQuery.Where("tbl_listings.id IN (?) AND tbl_listings.tenant_id = ? AND tbl_listings.is_deleted = 0", validIDs, Input.TenantId)
+    }
+ 
+    if Input.Tag != "" {
+        newtag := strings.ToLower(strings.ReplaceAll(Input.Tag, " ", "-"))
+        baseQuery = baseQuery.Where(
+            "LOWER(REPLACE(tbl_listings.tag, ' ', '-')) LIKE ?",
+            "%"+newtag+"%",
+        )
+    }
+ 
+    // Always join once
+    baseQuery = baseQuery.Joins("INNER JOIN tbl_channel_entries ce2 ON ce2.id = tbl_listings.entry_id")
+ 
+    if !Input.Profile {
+        baseQuery = baseQuery.Where("ce2.access_type = ? OR ce2.access_type IS NULL", "every_one")
+    }
+ 
+    if Input.UserRoleId != 2 {
+        baseQuery = baseQuery.Where("ce2.user_role_id = ? OR ce2.user_role_id = 0", 1)
+    }
+ 
+    if Input.Featured {
+ 
+        baseQuery = baseQuery.Where("tbl_listings.featured=1")
+    }
+    if Input.Filter.Keyword != "" {
+        baseQuery = baseQuery.Where(`lower(tbl_listings.title) LIKE lower(?)`, "%"+Input.Filter.Keyword+"%")
+    }
+ 
+    if Input.CategoryId != 0 {
+ 
+        baseQuery = baseQuery.Where("tbl_listings.category_id=?", Input.CategoryId)
+    }
+    if Input.Limit > 0 {
+ 
+        baseQuery = baseQuery.Limit(Input.Limit)
+    }
+ 
+    if Input.Offset > -1 {
+ 
+        baseQuery = baseQuery.Offset(Input.Offset)
+    }
+    if err := baseQuery.Scan(&listing).Error; err != nil {
+        return []TblListing{}, err
+    }
+    return listing, nil
 }
+ 
 
 func (Listingmodel ListingModel) FetchListingBySlugName(slugname string, tenantid string, DB *gorm.DB) (listing TblListing, err error) {
 
