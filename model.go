@@ -61,6 +61,8 @@ type TblListing struct {
 	TagSlug               string                `gorm:"-"`
 	EntrySlug             string                `gorm:"-:migration;<-:false"`
 	CategoryId            int                   `gorm:"type:integer"`
+	TechStackLogos        string                `gorm:"-:migration;<-:false"`
+	TechStackLogosArray   []string              `gorm:"-:migration;<-:false"`
 }
 
 type TblListingTags struct {
@@ -347,7 +349,7 @@ func (Listingmodel ListingModel) MultiSelectListingsDelete(listing *TblListing, 
 
 func (Listingmodel ListingModel) GetListingsList(Input ListingInput, DB *gorm.DB) (listing []TblListing, err error) {
 	baseQuery := DB.Debug().Table("tbl_listings").
-		Select("tbl_listings.*, tbl_mstr_membershiplevels.subscription_name as subscription_name, tbl_mstr_membershiplevels.initial_payment as initial_payment,ce1.slug as entry_slug").
+		Select("tbl_listings.*, tbl_mstr_membershiplevels.subscription_name as subscription_name, tbl_mstr_membershiplevels.initial_payment as initial_payment,ce1.slug as entry_slug,ce1.tech_stack_logos as tech_stack_logos").
 		Joins("LEFT JOIN tbl_mstr_membershiplevels ON tbl_mstr_membershiplevels.id = tbl_listings.membership_id").
 		Joins("LEFT JOIN tbl_channel_entries ce1 ON ce1.id = tbl_listings.entry_id").
 		Where(" tbl_listings.tenant_id = ? AND tbl_listings.is_deleted = 0 and ce1.is_deleted=0 and ce1.status=1", Input.TenantId)
