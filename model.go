@@ -101,7 +101,7 @@ var Listingmodels ListingModel
 
 // UpdateListingStatus updates the is_active field of a listing by ID.
 
-func (Listingmodel ListingModel) UpdateListingStatus(limit, offset int, filter Filter, tenantid string, DB *gorm.DB, id int, status int) error {
+func (Listingmodel ListingModel) UpdateListingStatus(tenantid string, DB *gorm.DB, id int, status int) error {
 	// result := DB.Model(&TblListing{}).Where("id = ?", id).Update("featured", status)
 
 	result := DB.Table("tbl_listings").
@@ -118,7 +118,23 @@ func (Listingmodel ListingModel) UpdateListingStatus(limit, offset int, filter F
 	}
 	return nil
 }
+func (Listingmodel ListingModel) EnableDiableUpdateStatus(tenantid string, DB *gorm.DB, id int, enableordiabale int) error {
+	fmt.Println("enableordiabaleenableordiabale :", enableordiabale)
+	// result := DB.Model(&TblListing{}).Where("id = ?", id).Update("featured", status)
+	result := DB.Debug().Table("tbl_listings").
+		Where("id = ? AND is_deleted = 0 AND tenant_id = ?", id, tenantid).
+		Updates(map[string]interface{}{
+			"status": enableordiabale,
+		})
 
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("no record found to update")
+	}
+	return nil
+}
 func (Listingmodel ListingModel) ListingList(limit, offset int, filter Filter, tenantid string, DB *gorm.DB) (results []TblListing, count int64, err error) {
 	fmt.Println("ListingList:", err)
 

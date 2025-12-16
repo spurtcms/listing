@@ -21,7 +21,7 @@ func ListingSetup(config Config) *Listing {
 	}
 
 }
-func (listing *Listing) FeaturedListingsList(limit, offset int, filter Filter, tenantid string, id, featured int) (err error) {
+func (listing *Listing) FeaturedAndAStatusUpdate(tenantid string, id, featured int, status int, indicator string) (err error) {
 	// (list []TblListing, Count int64, err error)
 	var Autherr error
 
@@ -29,27 +29,23 @@ func (listing *Listing) FeaturedListingsList(limit, offset int, filter Filter, t
 
 		return Autherr
 	}
+	if indicator == "Featured" {
+		err = Listingmodels.UpdateListingStatus(tenantid, listing.DB, id, featured)
+		if err != nil {
+			return Autherr
 
-	if filter.ContentType != "" {
-
-		filter.ContentType = strings.ToLower(filter.ContentType)
+		}
 	}
 
-	if filter.PaymentType == "Price" {
+	if indicator == "Status" {
+		// EnableDiableUpdateStatus
+		err = Listingmodels.EnableDiableUpdateStatus(tenantid, listing.DB, id, status)
+		if err != nil {
+			return Autherr
 
-		filter.PaymentType = strings.ToLower(filter.PaymentType)
-
-	} else if filter.PaymentType == "Membership" {
-
-		filter.PaymentType = strings.ToLower(filter.PaymentType)
-
+		}
 	}
 
-	err = Listingmodels.UpdateListingStatus(limit, offset, filter, tenantid, listing.DB, id, featured)
-	if err != nil {
-		return Autherr
-
-	}
 	return Autherr
 }
 
