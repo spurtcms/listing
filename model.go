@@ -64,6 +64,7 @@ type TblListing struct {
 	CategoryId            int                   `gorm:"type:integer"`
 	TechStackLogos        string                `gorm:"-:migration;<-:false"`
 	TechStackLogosArray   []string              `gorm:"-:migration;<-:false"`
+	Status                int                   `gorm:"type:integer"`
 }
 
 type TblListingTags struct {
