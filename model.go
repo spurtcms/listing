@@ -395,14 +395,12 @@ func (Listingmodel ListingModel) GetListingsList(Input ListingInput, DB *gorm.DB
 
 	// Always join once
 	baseQuery = baseQuery.Joins("INNER JOIN tbl_channel_entries ce2 ON ce2.id = tbl_listings.entry_id")
-
-	if !Input.Profile {
-		baseQuery = baseQuery.Where("ce2.access_type = ? OR ce2.access_type IS NULL", "every_one")
-	}
-
-	if Input.UserRoleId != 2 {
-		baseQuery = baseQuery.Where("ce2.user_role_id = ? OR ce2.user_role_id = 0", 1)
-	}
+	// if !Input.Profile {
+	// 	baseQuery = baseQuery.Where("ce2.access_type = ? OR ce2.access_type IS NULL", "every_one")
+	// }
+	// if Input.UserRoleId == 1 {
+	// 	baseQuery = baseQuery.Where("ce2.user_role_id = ? OR ce2.user_role_id = 0", 1)
+	// }
 
 	if Input.Featured {
 		baseQuery = baseQuery.Where("tbl_listings.featured=1")
