@@ -130,6 +130,7 @@ func (listing *Listing) CreateListing(create TblListing) error {
 		Tag:           create.Tag,
 		TenantId:      create.TenantId,
 		CategoryId:    create.CategoryId,
+		Status:        1,
 	}
 
 	err := Listingmodels.CreateListing(Create, listing.DB)
