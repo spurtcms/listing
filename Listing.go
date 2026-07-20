@@ -104,33 +104,33 @@ func (listing *Listing) CreateListing(create TblListing) error {
 
 		return Autherr
 	}
-
 	createdon, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
 	Create := TblListing{
-		Title:         create.Title,
-		Slug:          create.Slug,
-		Description:   create.Description,
-		ContentType:   create.ContentType,
-		ContentId:     create.ContentId,
-		EntryId:       create.EntryId,
-		IsDeleted:     0,
-		IsActive:      1,
-		CreatedOn:     createdon,
-		CreatedBy:     create.CreatedBy,
-		ImagePath:     create.ImagePath,
-		ImageName:     create.ImageName,
-		VideoName:     create.VideoName,
-		VideoPath:     create.VideoPath,
-		Url:           create.Url,
-		PaymentType:   create.PaymentType,
-		Price:         create.Price,
-		MembershipId:  create.MembershipId,
-		MultiplePrice: create.MultiplePrice,
-		Tag:           create.Tag,
-		TenantId:      create.TenantId,
-		CategoryId:    create.CategoryId,
-		Status:        1,
+		Title:             create.Title,
+		Slug:              create.Slug,
+		Description:       create.Description,
+		ContentType:       create.ContentType,
+		ContentId:         create.ContentId,
+		EntryId:           create.EntryId,
+		IsDeleted:         0,
+		IsActive:          1,
+		CreatedOn:         createdon,
+		CreatedBy:         create.CreatedBy,
+		ImagePath:         create.ImagePath,
+		ImageName:         create.ImageName,
+		VideoName:         create.VideoName,
+		VideoPath:         create.VideoPath,
+		Url:               create.Url,
+		PaymentType:       create.PaymentType,
+		Price:             create.Price,
+		MembershipId:      create.MembershipId,
+		MultiplePrice:     create.MultiplePrice,
+		Tag:               create.Tag,
+		TenantId:          create.TenantId,
+		CategoryId:        create.CategoryId,
+		Status:            1,
+		RelatedListingIds: create.RelatedListingIds,
 	}
 
 	err := Listingmodels.CreateListing(Create, listing.DB)
@@ -161,7 +161,6 @@ func (listing *Listing) EditListings(id int, tenantid string) (list TblListing, 
 }
 
 func (listing *Listing) UpdateListings(update TblListing) error {
-
 	if Autherr := AuthandPermission(listing); Autherr != nil {
 
 		return Autherr
@@ -170,29 +169,30 @@ func (listing *Listing) UpdateListings(update TblListing) error {
 	modifiedon, _ := time.Parse("2006-01-02 15:04:05", time.Now().UTC().Format("2006-01-02 15:04:05"))
 
 	Update := TblListing{
-		Id:            update.Id,
-		Title:         update.Title,
-		Slug:          update.Slug,
-		Description:   update.Description,
-		ContentType:   update.ContentType,
-		ContentId:     update.ContentId,
-		EntryId:       update.EntryId,
-		IsDeleted:     0,
-		IsActive:      1,
-		ModifiedOn:    modifiedon,
-		ModifiedBy:    update.ModifiedBy,
-		ImagePath:     update.ImagePath,
-		ImageName:     update.ImageName,
-		VideoName:     update.VideoName,
-		VideoPath:     update.VideoPath,
-		Url:           update.Url,
-		PaymentType:   update.PaymentType,
-		Price:         update.Price,
-		MembershipId:  update.MembershipId,
-		MultiplePrice: update.MultiplePrice,
-		Tag:           update.Tag,
-		TenantId:      update.TenantId,
-		CategoryId:    update.CategoryId,
+		Id:                update.Id,
+		Title:             update.Title,
+		Slug:              update.Slug,
+		Description:       update.Description,
+		ContentType:       update.ContentType,
+		ContentId:         update.ContentId,
+		EntryId:           update.EntryId,
+		IsDeleted:         0,
+		IsActive:          1,
+		ModifiedOn:        modifiedon,
+		ModifiedBy:        update.ModifiedBy,
+		ImagePath:         update.ImagePath,
+		ImageName:         update.ImageName,
+		VideoName:         update.VideoName,
+		VideoPath:         update.VideoPath,
+		Url:               update.Url,
+		PaymentType:       update.PaymentType,
+		Price:             update.Price,
+		MembershipId:      update.MembershipId,
+		MultiplePrice:     update.MultiplePrice,
+		Tag:               update.Tag,
+		TenantId:          update.TenantId,
+		CategoryId:        update.CategoryId,
+		RelatedListingIds: update.RelatedListingIds,
 	}
 
 	err := Listingmodels.UpdateListing(Update, listing.DB)

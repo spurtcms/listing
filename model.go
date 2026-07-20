@@ -65,6 +65,7 @@ type TblListing struct {
 	TechStackLogos        string                `gorm:"-:migration;<-:false"`
 	TechStackLogosArray   []string              `gorm:"-:migration;<-:false"`
 	Status                int                   `gorm:"type:integer"`
+	RelatedListingIds     string                `gorm:"type:character varying"`
 }
 
 type TblListingTags struct {
@@ -235,7 +236,6 @@ func (Listingmodel ListingModel) ListingList(limit, offset int, filter Filter, t
 }
 
 func (Listingmodel ListingModel) CreateListing(listing TblListing, DB *gorm.DB) error {
-
 	if err := DB.Table("tbl_listings").Create(&listing).Error; err != nil {
 
 		return err
@@ -341,6 +341,14 @@ func (Listingmodel ListingModel) UpdateListing(listing TblListing, DB *gorm.DB) 
 
 			return err
 		}
+	}
+	if listing.RelatedListingIds != "" {
+		fmt.Println("listing.RelatedListingIdslisting.RelatedListingIds s:", listing.RelatedListingIds)
+		if err := DB.Table("tbl_listings").Where("id=? and tenant_id=?", listing.Id, listing.TenantId).UpdateColumns(map[string]interface{}{"title": listing.Title, "slug": listing.Slug, "description": listing.Description, "content_type": listing.ContentType, "content_id": listing.ContentId, "entry_id": listing.EntryId, "modified_on": listing.ModifiedOn, "modified_by": listing.ModifiedBy, "image_name": listing.ImageName, "image_path": listing.ImagePath, "video_name": listing.VideoName, "video_path": listing.VideoPath, "url": listing.Url, "payment_type": listing.PaymentType, "price": listing.Price, "membership_id": listing.MembershipId, "multiple_price": listing.MultiplePrice, "tag": listing.Tag, "category_id": listing.CategoryId, "related_listing_ids": listing.RelatedListingIds}).Error; err != nil {
+
+			return err
+		}
+
 	}
 
 	return nil
