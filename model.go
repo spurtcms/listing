@@ -86,17 +86,18 @@ type ListingModel struct {
 }
 
 type ListingInput struct {
-	Limit        int
-	Offset       int
-	ListingIds   []string
-	Tag          string
-	Profile      bool
-	Filter       Filter
-	TenantId     string
-	Featured     bool
-	CategoryId   int
-	UserRoleId   int
-	CategorySlug string
+	Limit          int
+	Offset         int
+	ListingIds     []string
+	Tag            string
+	Profile        bool
+	Filter         Filter
+	TenantId       string
+	Featured       bool
+	CategoryId     int
+	UserRoleId     int
+	CategorySlug   string
+	SubcategoryIds []int
 }
 
 var Listingmodels ListingModel
@@ -145,6 +146,7 @@ func (Listingmodel ListingModel) ListingList(limit, offset int, filter Filter, t
         l.*,
         ce.channel_id,
         ce.title AS entry_title,
+        ce.slug AS entry_slug,
         c.channel_name,
         ce.id as entry_id,
         c.slug_name as channel_slug,
@@ -427,6 +429,13 @@ func (Listingmodel ListingModel) GetListingsList(Input ListingInput, DB *gorm.DB
 		categoryStr := strconv.Itoa(Input.CategoryId)
 		baseQuery = baseQuery.Where("(? = ANY(string_to_array(ce2.categories_id, ',')))", categoryStr)
 	}
+	if len(Input.SubcategoryIds) > 0 {
+		baseQuery = baseQuery.Where(
+			"tbl_listings.category_id IN ?",
+			Input.SubcategoryIds,
+		)
+	}
+
 	if Input.Limit > 0 {
 		baseQuery = baseQuery.Limit(Input.Limit)
 	}
