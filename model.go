@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -426,9 +425,11 @@ func (Listingmodel ListingModel) GetListingsList(Input ListingInput, DB *gorm.DB
 	// 	baseQuery = baseQuery.Where("FIND_IN_SET(?, ce2.categories_id)", categoryStr)
 	// }
 	if Input.CategoryId != 0 {
-		categoryStr := strconv.Itoa(Input.CategoryId)
-		baseQuery = baseQuery.Where("(? = ANY(string_to_array(ce2.categories_id, ',')))", categoryStr)
-	}
+    baseQuery = baseQuery.Where(
+        "tbl_listings.category_id = ?",
+        Input.CategoryId,
+    )
+}
 	if len(Input.SubcategoryIds) > 0 {
 		baseQuery = baseQuery.Where(
 			"tbl_listings.category_id IN ?",
