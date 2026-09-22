@@ -459,7 +459,7 @@ func (Listingmodel ListingModel) FetchListingBySlugName(slugname string, tenanti
 	// Step 1: Find Channel Entry by slugname
 	if err := DB.Table("tbl_channel_entries").
 		Select("id").
-		Where("slug = ?", slugname).
+		Where("slug = ? and is_deleted=0", slugname).
 		First(&entry).Error; err != nil {
 		return TblListing{}, err // Not found or query error
 	}
